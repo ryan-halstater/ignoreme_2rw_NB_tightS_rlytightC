@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Bayesian Model Averaging</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Bayesian Model Averaging</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(StanMoMo)</span></code></pre></div>
+<p>The <code>StanMoMo</code> package includes two methods for model
+selection and model averaging based on leave-future-out validation,
+called <em>stacking</em> and <em>pseudo-BMA</em>. First we briefly
+discuss why the standard Bayesian model averaging and leave-one-out
+cross-validation should be avoided for mortality forecasting. Second, we
+explain with some mathematical details how the methods of
+<em>stacking</em> and <em>pseudo-BMA</em> can be used for mortality
+forecasting based on future-out validation.</p>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Instead of choosing one model, model averaging stems from the idea
+that a combination of candidate models among a model list <span class="math inline">\(\mathcal{M}=(M_1,\dots,M_K)\)</span> may perform
+better than one single model. The standard Bayesian approach, called
+(BMA), consists in weighing each model by its posterior model evidence.
+This approach should be avoided for mortality forecasting for several
+reasons. Among them, BMA is very sensitive to prior choices and tends to
+select only one model asymptotically (see e.g. Fernandez et al. (2001)).
+Moreover, like the Bayes Information Criterion (BIC), BMA measures how
+well the model fits the past but not how well the model predicts the
+future.</p>
+<p>As an alternative approach, different authors considered model
+selection and averaging based on prediction performance on hold-out
+data. For instance, Yao et al. (2018) proposed Bayesian model averaging
+approaches based on leave-one-out cross-validation (LOO-CV). While this
+method is valid as a measure of fit, LOO-CV is problematic for
+forecasting.</p>
+<p>Indeed, leaving out only one observation at a time will allow
+information from the future to influence predictions of the past (i.e.,
+data from times <span class="math inline">\(t + 1, t + 2,
+\dots,\)</span> would inform predictions for time <span class="math inline">\(t\)</span>). Instead, it is more appropriate to
+use leave-future-out validation. In our context of mortality
+forecasting, instead of leaving one point out, we leave the last <span class="math inline">\(M\)</span> years of data out and evaluate the
+prediction performance on these <span class="math inline">\(M\)</span>
+years. This approach proposed in Barigou et al. (2023) is further
+discussed in the next section.</p>
+</div>
+<div id="bayesian-model-averaging-via-stacking-and-pseudo-bma" class="section level2">
+<h2>Bayesian model averaging via stacking and pseudo-BMA</h2>
+<p>In order to select the weights by validation, the data is split into
+a training set and a validation set as follows:</p>
+<ul>
+<li><span class="math inline">\(y_{1:N}=(d_{x,t},e_{x,t})\)</span> for
+all <span class="math inline">\(x\)</span> and <span class="math inline">\(t=t_1,\dots,t_N\)</span> is the data of deaths and
+exposures for the first <span class="math inline">\(N\)</span> years
+which is used to fit the model.</li>
+<li><span class="math inline">\(y_{N+1:N+M}=(d_{x,t},e_{x,t})\)</span>
+for all <span class="math inline">\(x\)</span> and <span class="math inline">\(t=t_{N+1},\dots,t_{N+M}\)</span> is the data of
+deaths and exposures for the remaining <span class="math inline">\(M\)</span> years which is used to validate the
+model.</li>
+</ul>
+<p>After fitting the mortality model to <span class="math inline">\(y_{1:N}\)</span>, we can obtain an empirical
+distribution of the future death rates <span class="math inline">\(\mu_{x,t}\)</span> for <span class="math inline">\(t=t_{N+1},\dots,t_{N+M}\)</span> based on the MCMC
+samples obtained via Stan. The <em>stacking</em> approach searches for
+the averaged model which maximizes the likelihood of the observed number
+of deaths on the validation set. In simple words, if the validation
+length is <span class="math inline">\(M=10\)</span>, the stacking
+approach will obtain the best forecasting averaged model for the last 10
+years of data. The <strong>stacking</strong> maximization problem can be
+expressed as <span class="math display">\[
+\max _{w \in \mathcal{S}_{1}^{K}}
+\sum_{x=x_1}^{x_n}  \sum_{j=t_{N+1}}^{t_{N+M}} \log \sum_{k=1}^{K} w_{k}
+p\left(d_{x,j} \mid y_{1: N},M_k\right),
+\]</span> where</p>
+<ul>
+<li><span class="math inline">\(\mathcal{S}_{1}^{K}=\left\{w
+\in[0,1]^{K}: \sum_{k=1}^{K} w_{k}=1\right\}\)</span>.</li>
+<li><span class="math inline">\(K\)</span> is the number of models.</li>
+<li><span class="math inline">\(p\left(d_{x,j} \mid y_{1:
+N},M_k\right)\)</span> is the posterior predictive density which can be
+estimated with the MCMC samples.</li>
+</ul>
+<p>By construction, the averaged distribution maximizes the log
+likelihood of the observed number of deaths in the validation set among
+all distributions in the convex hull: <span class="math display">\[\mathcal{C}=\left\{\sum_{k=1}^{K} w_{k} \times
+p\left(\cdot \mid M_{k}\right): \sum_{k} w_{k}=1, w_{k} \geq
+0\right\}\]</span></p>
+<p>As an alternative approach, we consider an AIC-type weighting using
+leave-future-out validation, called <em>pseudo-BMA</em>. This method is
+based on the expected log predictive density (elpd) which is an
+aggregate measure of fit which is in our mortality model given by <span class="math display">\[
+\operatorname{elpd}^{k}= \sum_{x=x_1}^{x_n}  \sum_{j=t_{N+1}}^{t_{N+M}}
+\log p\left(d_{x,j} \mid y_{1: N},M_k\right).
+\]</span> Typically, <span class="math inline">\(\operatorname{elpd}^{k}\)</span> will be higher if
+the model <span class="math inline">\(M_k\)</span> better predicts the
+observed deaths in the validation set. The <strong>pseudo-BMA</strong>
+weighting is then given by <span class="math display">\[
+w_{k}=\frac{\exp \left(\operatorname{elpd}^{k}\right)}{\sum_{k=1}^{K}
+\exp \left(\operatorname{elpd}^{k}\right)}.
+\]</span> Hence, the pseudo-BMA finds the relative weights proportional
+to the elpd of each model. As discussed in our paper Barigou et
+al. (2021), while this method provides a simple weight mechanism,
+stacking tends to outperform pseudo-BMA.</p>
+</div>
+<div id="implementation" class="section level2">
+<h2>Implementation</h2>
+<p>The package includes the <code>mortality_weights</code> function
+which performs Bayesian model averaging via stacking and pseudo-BMA.
+First, the user fits the different models with an extra argument
+<code>validation</code> which represents the number of years of
+validation. In a second step, the user calls the
+<code>mortality_weights</code> function with the list of model fits as
+argument.</p>
+<p>For instance, if we want to apply the averaging methods to the LC,
+APC and RH models to French data with 10 years of validation for ages
+50-90 and years 1970-2017, the weights can be obtained via</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co">#We extract deaths and exposures</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>ages.fit<span class="ot">&lt;-</span><span class="dv">50</span><span class="sc">:</span><span class="dv">90</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>years.fit<span class="ot">&lt;-</span><span class="dv">1970</span><span class="sc">:</span><span class="dv">2017</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>deathFR<span class="ot">&lt;-</span>FRMaleData<span class="sc">$</span>Dxt[<span class="fu">formatC</span>(ages.fit),<span class="fu">formatC</span>(years.fit)]</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>exposureFR<span class="ot">&lt;-</span>FRMaleData<span class="sc">$</span>Ext[<span class="fu">formatC</span>(ages.fit),<span class="fu">formatC</span>(years.fit)]</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#We fit the three mortality models</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>fitLC<span class="ot">=</span><span class="fu">lc_stan</span>(<span class="at">death =</span> deathFR,<span class="at">exposure=</span>exposureFR, <span class="at">forecast =</span> <span class="dv">10</span>, <span class="at">validation=</span><span class="dv">10</span>,<span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>,<span class="at">cores=</span><span class="dv">4</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>fitRH<span class="ot">=</span><span class="fu">rh_stan</span>(<span class="at">death =</span> deathFR,<span class="at">exposure=</span>exposureFR, <span class="at">forecast =</span> <span class="dv">10</span>, <span class="at">validation=</span><span class="dv">10</span>,<span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>,<span class="at">cores=</span><span class="dv">4</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>fitAPC<span class="ot">=</span><span class="fu">apc_stan</span>(<span class="at">death =</span> deathFR,<span class="at">exposure=</span>exposureFR, <span class="at">forecast =</span> <span class="dv">10</span>, <span class="at">validation=</span><span class="dv">10</span>,<span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>,<span class="at">cores=</span><span class="dv">4</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#We compute the model weights</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>model_weights<span class="ot">&lt;-</span><span class="fu">mortality_weights</span>(<span class="fu">list</span>(fitLC,fitRH,fitAPC))</span></code></pre></div>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p>Fernandez, C., Ley, E., &amp; Steel, M. F. (2001). Benchmark priors
+for Bayesian model averaging. Journal of Econometrics, 100(2),
+381-427.</p>
+<p>Yao, Y., Vehtari, A., Simpson, D., &amp; Gelman, A. (2018). Using
+stacking to average Bayesian predictive distributions (with discussion).
+Bayesian Analysis, 13(3), 917-1007.</p>
+<p>Barigou, K., Goffard, P. O., Loisel, S., &amp; Salhi, Y. (2023).
+Bayesian model averaging for mortality forecasting using
+leave-future-out validation. International Journal of Forecasting,
+39(2), 674-690.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
